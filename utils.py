@@ -6,9 +6,11 @@ from const import *
 def read_csv(file_name):
     players_action_dict = defaultdict(list)
     with open(file_name, 'r') as csvfile:
+        number_of_line = sum(1 for _ in csvfile)  # count the number of line in the file
+        csvfile.seek(0)  # set the file cursor back to file start
         reader = csv.reader(csvfile, delimiter=';', quotechar='"')
         next(reader, None)
-        for row in reader:
+        for line_number, row in enumerate(reader):
             # csv_content.append(row)
             action_list = row[1].split(',')
             player_id = row[0]
@@ -58,17 +60,19 @@ def read_csv(file_name):
             ordered_action_dict = OrderedDict(sorted(action_dict.items()))
             ordered_action_first_time_dict = OrderedDict(sorted(action_first_time_dict.items()))
 
-            players_action_dict[player_id].append((race, ordered_action_dict, ordered_action_first_time_dict))
+            other_info = (line_number / number_of_line,)
+
+            players_action_dict[player_id].append((race, ordered_action_dict, ordered_action_first_time_dict, other_info))
     return players_action_dict
 
 
 def read_new_csv(file_name):
     players_action_dict = defaultdict(list)
     with open(file_name, 'r') as csvfile:
+        number_of_line = sum(1 for _ in csvfile)  # count the number of line in the file
+        csvfile.seek(0)  # set the file cursor back to file start
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-        next(reader, None)
-        for row in reader:
-            # csv_content.append(row)
+        for line_number, row in enumerate(reader):
             action_list = row[2:]
             player_id = row[0]
             race = row[1]
@@ -120,7 +124,9 @@ def read_new_csv(file_name):
             ordered_action_dict = OrderedDict(sorted(action_dict.items()))
             ordered_action_first_time_dict = OrderedDict(sorted(action_first_time_dict.items()))
 
-            players_action_dict[player_id].append((race, ordered_action_dict, ordered_action_first_time_dict))
+            other_info = (line_number / number_of_line,)
+
+            players_action_dict[player_id].append((race, ordered_action_dict, ordered_action_first_time_dict, other_info))
     return players_action_dict
 
 
@@ -174,9 +180,8 @@ def csv_set_to_sklearn_batch(csv_dict):
     batch_input = []
     batch_output = []
 
-    player_id_to_name_dict = {}
     for i, t in enumerate(csv_dict.items()):
-        for race, action_dict, first_time_dict in t[1]:
+        for race, action_dict, first_time_dict, other_info in t[1]:
             race_id = 0
 
             if race == 'Zerg':
@@ -192,6 +197,7 @@ def csv_set_to_sklearn_batch(csv_dict):
             input_array = np.array([race_id]
                                    + list(action_dict.values())
                                    + list(first_time_dict.values())
+                                   + list(other_info)
                                    , dtype=int)
             output_string = t[0]
 
