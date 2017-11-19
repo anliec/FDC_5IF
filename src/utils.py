@@ -43,6 +43,7 @@ def read_csv(file_name):
                            'hotkey80': 0, 'sMineral': 0, 'hotkey02': 0, 'hotkey82': 0, 'hotkey92': 0, 'hotkey91': 0,
                            'hotkey01': 0, 'hotkey41': 0, 'hotkey21': 0, 'hotkey71': 0, 'hotkey81': 0, 'hotkey61': 0,
                            'hotkey11': 0, 'hotkey51': 0, 'hotkey31': 0}
+            current_timestep = 0
             for i in range(1, len(action_list) - 1, 2):
                 current_action = action_list[i]
                 current_timestep = int(action_list[i + 1])
@@ -61,7 +62,10 @@ def read_csv(file_name):
             ordered_action_dict = OrderedDict(sorted(action_dict.items()))
             ordered_action_first_time_dict = OrderedDict(sorted(action_first_time_dict.items()))
 
-            other_info = (line_number / number_of_line,)
+            # compute additional information
+            relative_line_position = line_number / number_of_line
+            apm = len(action_list) / (current_timestep + 1)  # + 1 to prevent division by 0
+            other_info = (relative_line_position, apm,)
 
             players_action_dict[player_id].append((race, ordered_action_dict, ordered_action_first_time_dict, other_info))
     return players_action_dict
@@ -112,20 +116,18 @@ def read_new_csv(file_name):
                     continue
                 if current_timestep > GAME_TIME_STEP_LIMIT:
                     break
-                # if current_action not in action_dict:
-                #     action_dict[current_action] = 0
                 action_dict[current_action] += 1
                 if action_dict[current_action] == 1:
                     action_first_time_dict[current_action] = current_timestep
-                # possible_action_dict[current_action] = 1
 
-            # if player_id not in players_dict:
-            #     players_dict[player_id] = []
-
+            # order action to be sure that every game as them in the same order
             ordered_action_dict = OrderedDict(sorted(action_dict.items()))
             ordered_action_first_time_dict = OrderedDict(sorted(action_first_time_dict.items()))
 
-            other_info = (line_number / number_of_line,)
+            # compute additional information
+            relative_line_position = line_number / number_of_line
+            apm = len(action_list) / (current_timestep + 1)  # + 1 to prevent division by 0
+            other_info = (relative_line_position, apm,)
 
             players_action_dict[player_id].append((race, ordered_action_dict, ordered_action_first_time_dict, other_info))
     return players_action_dict
@@ -136,7 +138,7 @@ def split_training_set(source_dict, test_to_train_ratio=0.1):
     test_dict = {}
     for player_name, player_game in source_dict.items():
         number_of_games = len(player_game)
-        split_index = int(number_of_games - number_of_games * test_to_train_ratio)
+        split_index = number_of_games - int(number_of_games * test_to_train_ratio) - 2
         train_game = player_game[0:split_index]
         test_game = player_game[split_index:-1]
         train_dict[player_name] = train_game

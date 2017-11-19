@@ -2,58 +2,69 @@ import csv
 from collections import defaultdict
 
 import numpy as np
-from keras.layers import InputLayer, Conv1D, MaxPool1D, Dense, Permute, Flatten, BatchNormalization
-from keras.models import Sequential, save_model
+from keras.layers import InputLayer, Conv1D, MaxPool1D, Dense, Permute, Flatten, BatchNormalization, Input, Concatenate
+from keras.models import Sequential, save_model, Model
 
 from src.utils import split_training_set
 
-NUMBER_OF_PLAYERS = 71
+NUMBER_OF_PLAYERS = 200
 
-VECTOR_CONCENTRATION_RATIO = 1.0
-VECTOR_SIZE = int(6720 * VECTOR_CONCENTRATION_RATIO)
+# VECTOR_CONCENTRATION_RATIO = 2.0
+VECTOR_SIZE = 10538
 VECTOR_DEPTH = 10 + 1
+OTHER_INFO_SIZE = 3 + 1
 
 
 def get_conv_model():
-    conv_model = Sequential()
-    conv_model.add(InputLayer(input_shape=(VECTOR_DEPTH, VECTOR_SIZE)))
-    conv_model.add(Permute(dims=(2, 1)))
-    conv_model.add(Conv1D(filters=8,
-                          kernel_size=5,
-                          padding='valid',
-                          activation='relu'))
-    conv_model.add(MaxPool1D(pool_size=4))
-    conv_model.add(BatchNormalization())
-    conv_model.add(Conv1D(filters=8,
-                          kernel_size=5,
-                          padding='valid',
-                          activation='relu'))
-    conv_model.add(MaxPool1D(pool_size=4))
-    conv_model.add(BatchNormalization())
-    conv_model.add(Conv1D(filters=8,
-                          kernel_size=5,
-                          padding='valid',
-                          activation='relu'))
-    conv_model.add(MaxPool1D(pool_size=4))
-    conv_model.add(BatchNormalization())
-    conv_model.add(Conv1D(filters=16,
-                          kernel_size=5,
-                          padding='valid',
-                          activation='relu'))
-    conv_model.add(MaxPool1D(pool_size=4))
-    conv_model.add(BatchNormalization())
-    conv_model.add(Conv1D(filters=16,
-                          kernel_size=5,
-                          padding='valid',
-                          activation='relu'))
-    conv_model.add(MaxPool1D(pool_size=4))
-    conv_model.add(BatchNormalization())
-    conv_model.add(Permute(dims=(2, 1)))
-    conv_model.add(Dense(1,
-                         activation='relu'))
-    conv_model.add(Flatten())
-    conv_model.add(Dense(NUMBER_OF_PLAYERS,
-                         activation='softmax'))
+    vec_in = Input(batch_shape=(None, VECTOR_DEPTH, VECTOR_SIZE))
+    conv = Permute(dims=(2, 1))(vec_in)
+    conv = Conv1D(filters=8,
+                  kernel_size=5,
+                  padding='valid',
+                  activation='relu'
+                  )(conv)
+    conv = MaxPool1D(pool_size=4)(conv)
+    conv = BatchNormalization()(conv)
+    conv = Conv1D(filters=8,
+                  kernel_size=5,
+                  padding='valid',
+                  activation='relu')(conv)
+    conv = MaxPool1D(pool_size=4)(conv)
+    conv = BatchNormalization()(conv)
+    conv = Conv1D(filters=8,
+                  kernel_size=5,
+                  padding='valid',
+                  activation='relu')(conv)
+    conv = MaxPool1D(pool_size=4)(conv)
+    conv = BatchNormalization()(conv)
+    conv = Conv1D(filters=16,
+                  kernel_size=5,
+                  padding='valid',
+                  activation='relu')(conv)
+    conv = MaxPool1D(pool_size=4)(conv)
+    conv = BatchNormalization()(conv)
+    conv = Conv1D(filters=16,
+                  kernel_size=5,
+                  padding='valid',
+                  activation='relu')(conv)
+    conv = MaxPool1D(pool_size=4)(conv)
+    conv = BatchNormalization()(conv)
+    # conv = Permute(dims=(2, 1)))
+    conv = Conv1D(filters=16,
+                  kernel_size=5,
+                  activation='sigmoid')(conv)
+    conv = MaxPool1D(pool_size=4)(conv)
+    conv = Flatten()(conv)
+
+    other_info = Input(batch_shape=(None, OTHER_INFO_SIZE,))
+
+    out = Concatenate()([conv, other_info])
+    out = Dense(NUMBER_OF_PLAYERS,
+                activation='softmax')(out)
+
+    conv_model = Model(inputs=[vec_in, other_info],
+                       outputs=out)
+
     conv_model.summary()
 
     conv_model.compile(optimizer='rmsprop',
@@ -98,6 +109,35 @@ def action_name_to_vector_id(action_name):
             return 0, 0
 
 
+def read_new_csv(file_name):
+    players_action_dict = defaultdict(list)
+    with open(file_name, 'r') as csvfile:
+        number_of_line = sum(1 for _ in csvfile)  # count the number of line in the file
+        csvfile.seek(0)  # set the file cursor back to file start
+        reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+        for line_number, row in enumerate(reader):
+            action_list = row[2:]
+            player_id = row[0]
+            race = row[1]
+
+            game = np.zeros(shape=(VECTOR_DEPTH, VECTOR_SIZE), dtype=int)
+
+            current_index = 0
+            for current_action in action_list:
+                if current_action[0] == 't':
+                    continue
+                vector_index, value = action_name_to_vector_id(current_action)
+                game[vector_index][current_index] = value
+                current_index += 1
+
+            # compute additional information
+            relative_line_position = line_number / number_of_line
+            other_info = (relative_line_position,)
+
+            players_action_dict[player_id].append((race, game, other_info))
+    return players_action_dict
+
+
 def read_csv(file_name):
     players_game_dict = defaultdict(list)
     collision = np.zeros(shape=(VECTOR_DEPTH,))
@@ -140,45 +180,51 @@ def read_csv(file_name):
 def csv_set_to_keras_batch(csv_dict):
     batch_input = []
     batch_output = []
+    batch_input_other_info = []
 
     player_id_to_name_dict = {}
     for i, t in enumerate(csv_dict.items()):
         player_id_to_name_dict[i] = t[0]
-        for race, action_vector in t[1]:
-            # race_list = [0, 0, 0]
-            #
-            # if race == 'Zerg':
-            #     race_list[2] = 1
-            # elif race == 'Protoss':
-            #     race_list[1] = 1
-            # elif race == 'Terran':
-            #     race_list[0] = 1
-            # else:
-            #     print("unknown race:", race)
-            #     exit(10)
+        for race, action_vector, other_info in t[1]:
+            race_list = [0, 0, 0]
+
+            if race == 'Zerg':
+                race_list[2] = 1
+            elif race == 'Protoss':
+                race_list[1] = 1
+            elif race == 'Terran':
+                race_list[0] = 1
+            else:
+                print("unknown race:", race)
+                exit(10)
             input_array = action_vector
+            input_other_info = race_list + list(other_info)
             output_array = np.zeros(shape=NUMBER_OF_PLAYERS, dtype=int)
             output_array[i] = 1
 
             batch_input.append(input_array)
+            batch_input_other_info.append(input_other_info)
             batch_output.append(output_array)
-    return batch_input, batch_output, player_id_to_name_dict
+    return batch_input, batch_input_other_info, batch_output, player_id_to_name_dict
 
 
 if __name__ == "__main__":
-    csv_player_game_dict = read_csv("data/train.csv")
+    csv_player_game_dict = read_new_csv("data/train2.csv")
+
     model = get_conv_model()
 
     train_player_game_dict, test_player_game_dict = split_training_set(csv_player_game_dict, 0.1)
 
-    training_input, training_output, _ = csv_set_to_keras_batch(train_player_game_dict)
-    test_input, test_output, _ = csv_set_to_keras_batch(test_player_game_dict)
+    training_input, training_input_oi, training_output, _ = csv_set_to_keras_batch(train_player_game_dict)
+    test_input, test_input_oi, test_output, _ = csv_set_to_keras_batch(test_player_game_dict)
 
-    model.fit(x=np.array(training_input),
+    model.fit(x=[np.array(training_input),
+                 np.array(training_input_oi)],
               y=np.array(training_output),
               epochs=100,
-              batch_size=64,
-              validation_data=(np.array(test_input),
+              batch_size=32,
+              validation_data=([np.array(test_input),
+                                np.array(test_input_oi)],
                                np.array(test_output)),
               verbose=1
               )
