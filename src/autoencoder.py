@@ -1,8 +1,7 @@
+from keras.layers import InputLayer, BatchNormalization, Dense, Activation
 from keras.models import Sequential
-from keras.layers import InputLayer, BatchNormalization, Dense, Activation, Dropout
 
-from const import *
-from utils import *
+from src.utils import *
 
 
 def get_model():

@@ -1,10 +1,11 @@
-from keras.models import Sequential, save_model, load_model
-from keras.layers import InputLayer, Conv1D, MaxPool1D, Dense, Permute, Flatten, BatchNormalization
 import csv
 from collections import defaultdict
-import numpy as np
 
-from utils import split_training_set
+import numpy as np
+from keras.layers import InputLayer, Conv1D, MaxPool1D, Dense, Permute, Flatten, BatchNormalization
+from keras.models import Sequential, save_model
+
+from src.utils import split_training_set
 
 NUMBER_OF_PLAYERS = 71
 

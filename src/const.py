@@ -1,18 +1,20 @@
 import numpy as np
+import src
 
 # set seed to be able to get same result on same run
 np.random.seed(6)
 
 NUMBER_OF_KEYS = 33
 NUMBER_OF_RACE = 3
+NUMBER_OF_OTHER_INFO = 1
 
 NUMBER_HIDDEN_NEURONS = 25
 NUMBER_NEURON_ENCODER = 25
 
-NUMBER_OF_PLAYERS = 71
+NUMBER_OF_PLAYERS = 200  # old is 71
 
 # FIT_BATCH_SIZE = 4 # set to the len of test file
-FIT_EPOCHS = 5000
+FIT_EPOCHS = 1000
 
 VALIDATION_SPLIT = 0.1
 

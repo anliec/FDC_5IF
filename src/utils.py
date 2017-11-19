@@ -1,6 +1,7 @@
 import csv
 from collections import defaultdict, OrderedDict
-from const import *
+
+from src.const import *
 
 
 def read_csv(file_name):
@@ -150,7 +151,7 @@ def csv_set_to_keras_batch(csv_dict):
     player_id_to_name_dict = {}
     for i, t in enumerate(csv_dict.items()):
         player_id_to_name_dict[i] = t[0]
-        for race, action_dict, first_time_dict in t[1]:
+        for race, action_dict, first_time_dict, other_info in t[1]:
             race_list = [0, 0, 0]
 
             if race == 'Zerg':
@@ -166,6 +167,7 @@ def csv_set_to_keras_batch(csv_dict):
             input_array = np.array(race_list
                                    + list(action_dict.values())
                                    + list(first_time_dict.values())
+                                   + list(other_info)
                                    , dtype=int)
             output_array = np.zeros(shape=NUMBER_OF_PLAYERS, dtype=int)
 

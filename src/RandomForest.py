@@ -1,8 +1,9 @@
-from utils import read_new_csv, csv_set_to_sklearn_batch
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
-import numpy as np
+
+from src.utils import read_new_csv, csv_set_to_sklearn_batch
 
 if __name__ == "__main__":
     csv_dict = read_new_csv("data/train2.csv")
