@@ -129,7 +129,10 @@ def read_new_csv(file_name):
             apm = len(action_list) / (current_timestep + 1)  # + 1 to prevent division by 0
             other_info = (relative_line_position, apm,)
 
-            players_action_dict[player_id].append((race, ordered_action_dict, ordered_action_first_time_dict, other_info))
+            if current_timestep < 60:
+                print("discarded line %i, game too short: %is" % (line_number, current_timestep))
+            else:
+                players_action_dict[player_id].append((race, ordered_action_dict, ordered_action_first_time_dict, other_info))
     return players_action_dict
 
 
