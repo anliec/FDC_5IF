@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     input_batch, output_batch = csv_set_to_sklearn_batch(csv_dict)
 
-    clf = RandomForestClassifier(random_state=None)
+    clf = RandomForestClassifier(random_state=None, class_weight="balanced")
     pipe = Pipeline(steps=[('tree', clf)])
 
     # Prediction
