@@ -109,14 +109,19 @@ def read_new_csv(file_name):
                            'hotkey01': 0, 'hotkey41': 0, 'hotkey21': 0, 'hotkey71': 0, 'hotkey81': 0, 'hotkey61': 0,
                            'hotkey11': 0, 'hotkey51': 0, 'hotkey31': 0}
             current_timestep = 0
+            max_ap5s = 0
+            ap5s = 0
             for i in action_list:
                 current_action = i
                 if current_action[0] == 't':
                     current_timestep += 5
+                    max_ap5s = max_ap5s if max_ap5s > ap5s else ap5s
+                    ap5s = 0
                     continue
                 if current_timestep > GAME_TIME_STEP_LIMIT:
                     break
                 action_dict[current_action] += 1
+                ap5s += 1
                 if action_dict[current_action] == 1:
                     action_first_time_dict[current_action] = current_timestep
 
@@ -127,9 +132,12 @@ def read_new_csv(file_name):
             # compute additional information
             relative_line_position = line_number / number_of_line
             apm = len(action_list) / (current_timestep + 1)  # + 1 to prevent division by 0
-            other_info = (relative_line_position, apm,)
+            other_info = (relative_line_position, apm, max_ap5s)
 
-            players_action_dict[player_id].append((race, ordered_action_dict, ordered_action_first_time_dict, other_info))
+            if current_timestep < 60:
+                print("discarded line %i, game too short: %is" % (line_number, current_timestep))
+            else:
+                players_action_dict[player_id].append((race, ordered_action_dict, ordered_action_first_time_dict, other_info))
     return players_action_dict
 
 
