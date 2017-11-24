@@ -75,6 +75,7 @@ def get_conv_model():
                        metrics=['categorical_accuracy'])
     return conv_model
 
+
 def read_csv(file_name):
     players_game_dict = defaultdict(list)
     collision = np.zeros(shape=(VECTOR_DEPTH,))

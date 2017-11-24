@@ -20,10 +20,12 @@ VALIDATION_SPLIT = 0.0
 
 GAME_TIME_STEP_LIMIT = 7000
 
-# vector for time serie config
+# vector for time series config
 VECTOR_SIZE = 10538
 VECTOR_DEPTH = 10 + 1
 OTHER_INFO_SIZE = 3 + 1
+
+VECTOR_SIZE_LSTM = 1000
 
 
 def read_int_from_file(default_val, file):

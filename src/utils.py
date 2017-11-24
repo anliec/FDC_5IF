@@ -254,7 +254,7 @@ def action_name_to_vector_id(action_name):
             return 0, 0
 
 
-def read_csv_sequence(file_name):
+def read_csv_sequence(file_name, lenght=VECTOR_SIZE):
     players_action_dict = defaultdict(list)
     with open(file_name, 'r') as csvfile:
         number_of_line = sum(1 for _ in csvfile)  # count the number of line in the file
@@ -265,7 +265,7 @@ def read_csv_sequence(file_name):
             player_id = row[0]
             race = row[1]
 
-            game = np.zeros(shape=(VECTOR_DEPTH, VECTOR_SIZE), dtype=int)
+            game = np.zeros(shape=(VECTOR_DEPTH, lenght), dtype=int)
 
             current_index = 0
             for current_action in action_list:
@@ -274,6 +274,8 @@ def read_csv_sequence(file_name):
                 vector_index, value = action_name_to_vector_id(current_action)
                 game[vector_index][current_index] = value
                 current_index += 1
+                if current_index >= lenght:
+                    break
 
             # compute additional information
             relative_line_position = line_number / number_of_line
@@ -311,4 +313,90 @@ def csv_sequence_set_to_keras_batch(csv_dict):
             batch_input.append(input_array)
             batch_input_other_info.append(input_other_info)
             batch_output.append(output_array)
-    return batch_input, batch_input_other_info, batch_output, player_id_to_name_dict
+    return np.array(batch_input), np.array(batch_input_other_info), \
+           np.array(batch_output), np.array(player_id_to_name_dict)
+
+
+def extanded_read_new_csv(file_name):
+    players_action_dict = defaultdict(list)
+    with open(file_name, 'r') as csvfile:
+        number_of_line = sum(1 for _ in csvfile)  # count the number of line in the file
+        csvfile.seek(0)  # set the file cursor back to file start
+        reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+        for line_number, row in enumerate(reader):
+            action_list = row[2:]
+            player_id = row[0]
+            race = row[1]
+            action_first_time_dict = {'s': GAME_TIME_STEP_LIMIT, 'hotkey50': GAME_TIME_STEP_LIMIT,
+                                      'hotkey40': GAME_TIME_STEP_LIMIT, 'hotkey52': GAME_TIME_STEP_LIMIT,
+                                      'hotkey42': GAME_TIME_STEP_LIMIT, 'hotkey10': GAME_TIME_STEP_LIMIT,
+                                      'hotkey12': GAME_TIME_STEP_LIMIT, 'hotkey20': GAME_TIME_STEP_LIMIT,
+                                      'hotkey22': GAME_TIME_STEP_LIMIT, 'hotkey30': GAME_TIME_STEP_LIMIT,
+                                      'hotkey60': GAME_TIME_STEP_LIMIT,
+                                      'hotkey62': GAME_TIME_STEP_LIMIT,
+                                      'hotkey32': GAME_TIME_STEP_LIMIT, 'Base': GAME_TIME_STEP_LIMIT,
+                                      'hotkey70': GAME_TIME_STEP_LIMIT, 'hotkey72': GAME_TIME_STEP_LIMIT,
+                                      'hotkey00': GAME_TIME_STEP_LIMIT,
+                                      'hotkey90': GAME_TIME_STEP_LIMIT,
+                                      'hotkey80': GAME_TIME_STEP_LIMIT, 'SingleMineral': GAME_TIME_STEP_LIMIT,
+                                      'hotkey02': GAME_TIME_STEP_LIMIT, 'hotkey82': GAME_TIME_STEP_LIMIT,
+                                      'hotkey92': GAME_TIME_STEP_LIMIT,
+                                      'hotkey91': GAME_TIME_STEP_LIMIT,
+                                      'hotkey01': GAME_TIME_STEP_LIMIT, 'hotkey41': GAME_TIME_STEP_LIMIT,
+                                      'hotkey21': GAME_TIME_STEP_LIMIT, 'hotkey71': GAME_TIME_STEP_LIMIT,
+                                      'hotkey81': GAME_TIME_STEP_LIMIT,
+                                      'hotkey61': GAME_TIME_STEP_LIMIT,
+                                      'hotkey11': GAME_TIME_STEP_LIMIT, 'hotkey51': GAME_TIME_STEP_LIMIT,
+                                      'hotkey31': GAME_TIME_STEP_LIMIT}
+            action_dict = {'s': 0, 'hotkey50': 0, 'hotkey40': 0, 'hotkey52': 0, 'hotkey42': 0, 'hotkey10': 0,
+                           'hotkey12': 0, 'hotkey20': 0, 'hotkey22': 0, 'hotkey30': 0, 'hotkey60': 0, 'hotkey62': 0,
+                           'hotkey32': 0, 'Base': 0, 'hotkey70': 0, 'hotkey72': 0, 'hotkey00': 0, 'hotkey90': 0,
+                           'hotkey80': 0, 'SingleMineral': 0, 'hotkey02': 0, 'hotkey82': 0, 'hotkey92': 0,
+                           'hotkey91': 0,
+                           'hotkey01': 0, 'hotkey41': 0, 'hotkey21': 0, 'hotkey71': 0, 'hotkey81': 0, 'hotkey61': 0,
+                           'hotkey11': 0, 'hotkey51': 0, 'hotkey31': 0}
+
+            game = np.zeros(shape=(VECTOR_DEPTH, VECTOR_SIZE), dtype=int)
+            current_timestep = 0
+            max_ap5s = 0
+            ap5s = 0
+            current_index = 0
+            for i in action_list:
+                break_ask = 0
+                current_action = i
+                if current_action[0] == 't':
+                    current_timestep += 5
+                    max_ap5s = max(ap5s, max_ap5s)
+                    ap5s = 0
+                    continue
+                if current_timestep > GAME_TIME_STEP_LIMIT:
+                    break_ask += 1
+                else:
+                    action_dict[current_action] += 1
+                    ap5s += 1
+                    if action_dict[current_action] == 1:
+                        action_first_time_dict[current_action] = current_timestep
+                if current_index > VECTOR_SIZE:
+                    break_ask += 1
+                else:
+                    vector_index, value = action_name_to_vector_id(current_action)
+                    game[vector_index][current_index] = value
+                    current_index += 1
+                if break_ask == 2:
+                    break
+
+            # order action to be sure that every game as them in the same order
+            ordered_action_dict = OrderedDict(sorted(action_dict.items()))
+            ordered_action_first_time_dict = OrderedDict(sorted(action_first_time_dict.items()))
+
+            # compute additional information
+            relative_line_position = line_number / number_of_line
+            apm = len(action_list) / (current_timestep + 1)  # + 1 to prevent division by 0
+            other_info = (relative_line_position, apm, max_ap5s)
+
+            if current_timestep < 60:
+                print("discarded line %i, game too short: %is" % (line_number, current_timestep))
+            else:
+                players_action_dict[player_id].append(
+                    (race, ordered_action_dict, ordered_action_first_time_dict, other_info))
+    return players_action_dict
