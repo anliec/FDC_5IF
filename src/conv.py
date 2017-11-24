@@ -115,18 +115,15 @@ def read_csv(file_name):
     return players_game_dict
 
 
-
-
-
 if __name__ == "__main__":
-    csv_player_game_dict = read_new_csv("data/train2.csv")
+    csv_player_game_dict = read_csv_sequence("data/train2.csv")
 
     model = get_conv_model()
 
     train_player_game_dict, test_player_game_dict = split_training_set(csv_player_game_dict, 0.1)
 
-    training_input, training_input_oi, training_output, _ = csv_set_to_keras_batch(train_player_game_dict)
-    test_input, test_input_oi, test_output, _ = csv_set_to_keras_batch(test_player_game_dict)
+    training_input, training_input_oi, training_output, _ = csv_sequence_set_to_keras_batch(train_player_game_dict)
+    test_input, test_input_oi, test_output, _ = csv_sequence_set_to_keras_batch(test_player_game_dict)
 
     model.fit(x=np.array(training_input),
               y=np.array(training_output),
