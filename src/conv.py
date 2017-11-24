@@ -2,7 +2,8 @@ import csv
 from collections import defaultdict
 
 import numpy as np
-from keras.layers import InputLayer, Conv1D, MaxPool1D, Dense, Permute, Flatten, BatchNormalization, Input, Concatenate
+from keras.layers import Conv1D, MaxPool1D, Dense, Permute, \
+    Flatten, BatchNormalization, Input, Concatenate, Dropout
 from keras.models import Sequential, save_model, Model
 
 from src.utils import split_training_set
@@ -18,7 +19,7 @@ OTHER_INFO_SIZE = 3 + 1
 def get_conv_model():
     vec_in = Input(batch_shape=(None, VECTOR_DEPTH, VECTOR_SIZE))
     conv = Permute(dims=(2, 1))(vec_in)
-    conv = Conv1D(filters=8,
+    conv = Conv1D(filters=4,
                   kernel_size=5,
                   padding='valid',
                   activation='relu'
@@ -50,19 +51,27 @@ def get_conv_model():
     conv = MaxPool1D(pool_size=4)(conv)
     conv = BatchNormalization()(conv)
     # conv = Permute(dims=(2, 1)))
-    conv = Conv1D(filters=16,
+    conv = Conv1D(filters=32,
                   kernel_size=5,
-                  activation='sigmoid')(conv)
+                  activation='relu')(conv)
     conv = MaxPool1D(pool_size=4)(conv)
     conv = Flatten()(conv)
+    conv = BatchNormalization()(conv)
 
-    other_info = Input(batch_shape=(None, OTHER_INFO_SIZE,))
+    # other_info = Input(batch_shape=(None, OTHER_INFO_SIZE,))
 
-    out = Concatenate()([conv, other_info])
+    # out = Concatenate()([conv, other_info])
+    out = Dense(64,
+                activation='relu'
+                )(conv)
+    out = Dropout(0.1)(out)
+    out = BatchNormalization()(out)
     out = Dense(NUMBER_OF_PLAYERS,
-                activation='softmax')(out)
+                activation='softmax'
+                )(out)
+    out = Dropout(0.1)(out)
 
-    conv_model = Model(inputs=[vec_in, other_info],
+    conv_model = Model(inputs=vec_in,
                        outputs=out)
 
     conv_model.summary()
@@ -218,13 +227,11 @@ if __name__ == "__main__":
     training_input, training_input_oi, training_output, _ = csv_set_to_keras_batch(train_player_game_dict)
     test_input, test_input_oi, test_output, _ = csv_set_to_keras_batch(test_player_game_dict)
 
-    model.fit(x=[np.array(training_input),
-                 np.array(training_input_oi)],
+    model.fit(x=np.array(training_input),
               y=np.array(training_output),
-              epochs=100,
-              batch_size=32,
-              validation_data=([np.array(test_input),
-                                np.array(test_input_oi)],
+              epochs=500,
+              batch_size=16,
+              validation_data=(np.array(test_input),
                                np.array(test_output)),
               verbose=1
               )
