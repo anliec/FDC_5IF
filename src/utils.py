@@ -217,3 +217,98 @@ def csv_set_to_sklearn_batch(csv_dict):
             batch_output.append(output_string)
     return batch_input, batch_output
 
+
+def action_name_to_id(action_name):
+    if type(action_name) == str:
+        if action_name[:6] == 'hotkey':
+            hotkey_id = int(action_name[6])
+            hotkey_action = int(action_name[7])
+            return 10 * hotkey_action + hotkey_id + 1 + 3
+        elif action_name == 's':
+            return 1
+        elif action_name == 'sBase' or action_name == 'Base':
+            return 3
+        elif action_name == 'sMineral' or action_name == 'SingleMineral':
+            return 2
+        else:
+            return 0
+
+
+def action_name_to_vector_id(action_name):
+    if type(action_name) == str:
+        if action_name[:6] == 'hotkey':
+            hotkey_id = int(action_name[6])
+            hotkey_action = int(action_name[7])
+            if hotkey_action > 0:
+                index = 2
+            else:
+                index = 1
+            return hotkey_id, index
+        elif action_name == 's':
+            return 1, 1
+        elif action_name == 'sBase' or action_name == 'Base':
+            return 1, 3
+        elif action_name == 'sMineral' or action_name == 'SingleMineral':
+            return 1, 2
+        else:
+            return 0, 0
+
+
+def read_csv_sequence(file_name):
+    players_action_dict = defaultdict(list)
+    with open(file_name, 'r') as csvfile:
+        number_of_line = sum(1 for _ in csvfile)  # count the number of line in the file
+        csvfile.seek(0)  # set the file cursor back to file start
+        reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+        for line_number, row in enumerate(reader):
+            action_list = row[2:]
+            player_id = row[0]
+            race = row[1]
+
+            game = np.zeros(shape=(VECTOR_DEPTH, VECTOR_SIZE), dtype=int)
+
+            current_index = 0
+            for current_action in action_list:
+                if current_action[0] == 't':
+                    continue
+                vector_index, value = action_name_to_vector_id(current_action)
+                game[vector_index][current_index] = value
+                current_index += 1
+
+            # compute additional information
+            relative_line_position = line_number / number_of_line
+            other_info = (relative_line_position,)
+
+            players_action_dict[player_id].append((race, game, other_info))
+    return players_action_dict
+
+
+def csv_set_to_keras_batch(csv_dict):
+    batch_input = []
+    batch_output = []
+    batch_input_other_info = []
+
+    player_id_to_name_dict = {}
+    for i, t in enumerate(csv_dict.items()):
+        player_id_to_name_dict[i] = t[0]
+        for race, action_vector, other_info in t[1]:
+            race_list = [0, 0, 0]
+
+            if race == 'Zerg':
+                race_list[2] = 1
+            elif race == 'Protoss':
+                race_list[1] = 1
+            elif race == 'Terran':
+                race_list[0] = 1
+            else:
+                print("unknown race:", race)
+                exit(10)
+            input_array = action_vector
+            input_other_info = race_list + list(other_info)
+            output_array = np.zeros(shape=NUMBER_OF_PLAYERS, dtype=int)
+            output_array[i] = 1
+
+            batch_input.append(input_array)
+            batch_input_other_info.append(input_other_info)
+            batch_output.append(output_array)
+    return batch_input, batch_input_other_info, batch_output, player_id_to_name_dict
