@@ -72,7 +72,7 @@ def read_csv(file_name):
     return players_action_dict
 
 
-def read_new_csv(file_name):
+def read_new_csv(file_name, read_all=False):
     players_action_dict = defaultdict(list)
     with open(file_name, 'r') as csvfile:
         number_of_line = sum(1 for _ in csvfile)  # count the number of line in the file
@@ -135,7 +135,7 @@ def read_new_csv(file_name):
             apm = len(action_list) / (current_timestep + 1)  # + 1 to prevent division by 0
             other_info = (relative_line_position, apm, max_ap5s)
 
-            if current_timestep < 60:
+            if current_timestep < 60 and not read_all:
                 print("discarded line %i, game too short: %is" % (line_number, current_timestep))
             else:
                 players_action_dict[player_id].append((race, ordered_action_dict, ordered_action_first_time_dict, other_info))
@@ -207,10 +207,10 @@ def csv_set_to_sklearn_batch(csv_dict):
                 print("unknown race:", race)
                 exit(10)
 
-            input_array = np.array([race_id]
-                                   + list(action_dict.values())
-                                   + list(first_time_dict.values())
+            input_list = [race_id] + list(action_dict.values()) \
+                                   + list(first_time_dict.values()) \
                                    + list(other_info)
+            input_array = np.array(input_list
                                    , dtype=int)
             output_string = t[0]
 
@@ -318,11 +318,13 @@ def csv_sequence_set_to_keras_batch(csv_dict):
            np.array(batch_output), np.array(player_id_to_name_dict)
 
 
-def expended_read_new_csv(file_name):
+def expended_read_new_csv(file_name, read_all=False):
     # load model trained by conv.py
     conv_model = load_model("conv.knn")
     # remove last layer (the classifier is not what we look for, we want the features)
-    conv_model.pop()
+    conv_model.pop()  # drop dropout layer
+    conv_model.pop()  # drop last Dense layer
+    conv_model.summary()
     players_action_dict = defaultdict(list)
     with open(file_name, 'r') as csvfile:
         number_of_line = sum(1 for _ in csvfile)  # count the number of line in the file
@@ -361,7 +363,7 @@ def expended_read_new_csv(file_name):
                            'hotkey01': 0, 'hotkey41': 0, 'hotkey21': 0, 'hotkey71': 0, 'hotkey81': 0, 'hotkey61': 0,
                            'hotkey11': 0, 'hotkey51': 0, 'hotkey31': 0}
 
-            game = np.zeros(shape=(VECTOR_DEPTH, VECTOR_SIZE), dtype=int)
+            game = np.zeros(shape=(1, VECTOR_DEPTH, VECTOR_SIZE), dtype=int)
             current_timestep = 0
             max_ap5s = 0
             ap5s = 0
@@ -385,7 +387,7 @@ def expended_read_new_csv(file_name):
                     break_ask += 1
                 else:
                     vector_index, value = action_name_to_vector_id(current_action)
-                    game[vector_index][current_index] = value
+                    game[0][vector_index][current_index] = value
                     current_index += 1
                 if break_ask == 2:
                     break
@@ -399,9 +401,9 @@ def expended_read_new_csv(file_name):
             # compute additional information
             relative_line_position = line_number / number_of_line
             apm = len(action_list) / (current_timestep + 1)  # + 1 to prevent division by 0
-            other_info = (relative_line_position, apm, max_ap5s) + tuple(conv_feature)
+            other_info = (relative_line_position, apm, max_ap5s) + tuple(conv_feature[0])
 
-            if current_timestep < 60:
+            if current_timestep < 60 and not read_all:
                 print("discarded line %i, game too short: %is" % (line_number, current_timestep))
             else:
                 players_action_dict[player_id].append(

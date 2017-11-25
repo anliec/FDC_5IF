@@ -6,8 +6,8 @@ from sklearn.pipeline import Pipeline
 from src.utils import read_new_csv, csv_set_to_sklearn_batch, expended_read_new_csv
 
 if __name__ == "__main__":
-    csv_dict = expended_read_new_csv("data/train2.csv")
-    # csv_dict = read_new_csv("data/train2.csv")
+    # csv_dict = expended_read_new_csv("data/train2.csv")
+    csv_dict = read_new_csv("data/train2.csv")
 
     input_batch, output_batch = csv_set_to_sklearn_batch(csv_dict)
 
@@ -15,9 +15,9 @@ if __name__ == "__main__":
     pipe = Pipeline(steps=[('tree', clf)])
 
     # Prediction
-    max_depth = [10, 15, 20, 25]
-    min_samples_split = [2, 3, 4, 5]
-    n_estimators = [90, 100, 110, 120]
+    max_depth = [15, 20, 25]
+    min_samples_split = [3, 4, 5]
+    n_estimators = [100, 110, 120]
 
     clf.fit(X=np.array(input_batch),
             y=np.array(output_batch))
@@ -33,7 +33,8 @@ if __name__ == "__main__":
     print(estimator.best_params_)
     print(estimator.best_score_)
 
-    csv_test_dict = read_new_csv("data/test2f.csv")
+    csv_test_dict = read_new_csv("data/test2f.csv", read_all=True)
+    # csv_test_dict = expended_read_new_csv("data/test2f.csv", read_all=True)
     input_test_batch, _ = csv_set_to_sklearn_batch(csv_test_dict)
 
     prediction = estimator.predict(X=input_test_batch)
