@@ -1,6 +1,6 @@
 from keras.layers import Conv1D, MaxPool1D, Dense, Permute, \
     Flatten, BatchNormalization, Input, Dropout
-from keras.models import save_model, Model
+from keras.models import save_model, Sequential
 
 from src.utils import *
 
@@ -9,64 +9,64 @@ NUMBER_OF_PLAYERS = 200
 # VECTOR_CONCENTRATION_RATIO = 2.0
 
 
-
 def get_conv_model():
-    vec_in = Input(batch_shape=(None, VECTOR_DEPTH, VECTOR_SIZE))
-    conv = Permute(dims=(2, 1))(vec_in)
-    conv = Conv1D(filters=4,
-                  kernel_size=5,
-                  padding='valid',
-                  activation='relu'
-                  )(conv)
-    conv = MaxPool1D(pool_size=4)(conv)
-    conv = BatchNormalization()(conv)
-    conv = Conv1D(filters=8,
-                  kernel_size=5,
-                  padding='valid',
-                  activation='relu')(conv)
-    conv = MaxPool1D(pool_size=4)(conv)
-    conv = BatchNormalization()(conv)
-    conv = Conv1D(filters=8,
-                  kernel_size=5,
-                  padding='valid',
-                  activation='relu')(conv)
-    conv = MaxPool1D(pool_size=4)(conv)
-    conv = BatchNormalization()(conv)
-    conv = Conv1D(filters=16,
-                  kernel_size=5,
-                  padding='valid',
-                  activation='relu')(conv)
-    conv = MaxPool1D(pool_size=4)(conv)
-    conv = BatchNormalization()(conv)
-    conv = Conv1D(filters=16,
-                  kernel_size=5,
-                  padding='valid',
-                  activation='relu')(conv)
-    conv = MaxPool1D(pool_size=4)(conv)
-    conv = BatchNormalization()(conv)
-    # conv = Permute(dims=(2, 1)))
-    conv = Conv1D(filters=32,
-                  kernel_size=5,
-                  activation='relu')(conv)
-    conv = MaxPool1D(pool_size=4)(conv)
-    conv = Flatten()(conv)
-    conv = BatchNormalization()(conv)
+    conv_model = Sequential()
+    conv_model.add(Input(batch_shape=(None, VECTOR_DEPTH, VECTOR_SIZE)))
+    conv_model.add(Permute(dims=(2, 1)))
+    conv_model.add(Conv1D(filters=4,
+                          kernel_size=5,
+                          padding='valid',
+                          activation='relu'
+                          ))
+    conv_model.add(MaxPool1D(pool_size=4))
+    conv_model.add(BatchNormalization())
+    conv_model.add(Conv1D(filters=8,
+                          kernel_size=5,
+                          padding='valid',
+                          activation='relu'))
+    conv_model.add(MaxPool1D(pool_size=4))
+    conv_model.add(BatchNormalization())
+    conv_model.add(Conv1D(filters=8,
+                          kernel_size=5,
+                          padding='valid',
+                          activation='relu'))
+    conv_model.add(MaxPool1D(pool_size=4))
+    conv_model.add(BatchNormalization())
+    conv_model.add(Conv1D(filters=16,
+                          kernel_size=5,
+                          padding='valid',
+                          activation='relu'))
+    conv_model.add(MaxPool1D(pool_size=4))
+    conv_model.add(BatchNormalization())
+    conv_model.add(Conv1D(filters=16,
+                          kernel_size=5,
+                          padding='valid',
+                          activation='relu'))
+    conv_model.add(MaxPool1D(pool_size=4))
+    conv_model.add(BatchNormalization())
+    # conv_model.add(Permute(dims=(2, 1)))
+    conv_model.add(Conv1D(filters=32,
+                          kernel_size=5,
+                          activation='relu'))
+    conv_model.add(MaxPool1D(pool_size=4))
+    conv_model.add(Flatten())
+    conv_model.add(BatchNormalization())
 
     # other_info = Input(batch_shape=(None, OTHER_INFO_SIZE,))
 
-    # out = Concatenate()([conv, other_info])
-    out = Dense(64,
-                activation='relu'
-                )(conv)
-    out = Dropout(0.1)(out)
-    out = BatchNormalization()(out)
-    out = Dense(NUMBER_OF_PLAYERS,
-                activation='softmax'
-                )(out)
-    out = Dropout(0.1)(out)
+    # conv_model.add(Concatenate()([conv, other_info])
+    conv_model.add(Dense(64,
+                         activation='relu'
+                         ))
+    conv_model.add(Dropout(0.1))
+    conv_model.add(BatchNormalization())
+    conv_model.add(Dense(NUMBER_OF_PLAYERS,
+                         activation='softmax'
+                         ))
+    conv_model.add(Dropout(0.1))
 
-    conv_model = Model(inputs=vec_in,
-                       outputs=out)
+    # conv_model = Model(inputs=vec_in,
+    #                    outputs=out)
 
     conv_model.summary()
 

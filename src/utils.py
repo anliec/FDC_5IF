@@ -1,5 +1,6 @@
 import csv
 from collections import defaultdict, OrderedDict
+from keras.models import load_model
 
 from src.const import *
 
@@ -317,7 +318,11 @@ def csv_sequence_set_to_keras_batch(csv_dict):
            np.array(batch_output), np.array(player_id_to_name_dict)
 
 
-def extanded_read_new_csv(file_name):
+def expended_read_new_csv(file_name):
+    # load model trained by conv.py
+    conv_model = load_model("conv.knn")
+    # remove last layer (the classifier is not what we look for, we want the features)
+    conv_model.pop()
     players_action_dict = defaultdict(list)
     with open(file_name, 'r') as csvfile:
         number_of_line = sum(1 for _ in csvfile)  # count the number of line in the file
@@ -385,6 +390,8 @@ def extanded_read_new_csv(file_name):
                 if break_ask == 2:
                     break
 
+            conv_feature = conv_model.predict(x=game, batch_size=1, verbose=0)
+
             # order action to be sure that every game as them in the same order
             ordered_action_dict = OrderedDict(sorted(action_dict.items()))
             ordered_action_first_time_dict = OrderedDict(sorted(action_first_time_dict.items()))
@@ -392,7 +399,7 @@ def extanded_read_new_csv(file_name):
             # compute additional information
             relative_line_position = line_number / number_of_line
             apm = len(action_list) / (current_timestep + 1)  # + 1 to prevent division by 0
-            other_info = (relative_line_position, apm, max_ap5s)
+            other_info = (relative_line_position, apm, max_ap5s) + tuple(conv_feature)
 
             if current_timestep < 60:
                 print("discarded line %i, game too short: %is" % (line_number, current_timestep))
