@@ -1,5 +1,5 @@
 from keras.layers import Conv1D, MaxPool1D, Dense, Permute, \
-    Flatten, BatchNormalization, Input, Dropout
+    Flatten, BatchNormalization, Input, Dropout, InputLayer
 from keras.models import save_model, Sequential
 
 from src.utils import *
@@ -11,7 +11,7 @@ NUMBER_OF_PLAYERS = 200
 
 def get_conv_model():
     conv_model = Sequential()
-    conv_model.add(Input(batch_shape=(None, VECTOR_DEPTH, VECTOR_SIZE)))
+    conv_model.add(InputLayer(input_shape=(VECTOR_DEPTH, VECTOR_SIZE)))
     conv_model.add(Permute(dims=(2, 1)))
     conv_model.add(Conv1D(filters=4,
                           kernel_size=5,
@@ -63,7 +63,7 @@ def get_conv_model():
     conv_model.add(Dense(NUMBER_OF_PLAYERS,
                          activation='softmax'
                          ))
-    conv_model.add(Dropout(0.1))
+    conv_model.add(Dropout(0.2))
 
     # conv_model = Model(inputs=vec_in,
     #                    outputs=out)
