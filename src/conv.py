@@ -6,7 +6,7 @@ from src.utils import *
 
 NUMBER_OF_PLAYERS = 200
 
-# VECTOR_CONCENTRATION_RATIO = 2.0
+VECTOR_CONCENTRATION_RATIO = 1.0
 
 
 def get_conv_model():
@@ -47,10 +47,9 @@ def get_conv_model():
     # conv_model.add(Permute(dims=(2, 1)))
     conv_model.add(Conv1D(filters=32,
                           kernel_size=5,
-                          activation='relu'))
+                          activation='sigmoid'))
     conv_model.add(MaxPool1D(pool_size=4))
     conv_model.add(Flatten())
-    conv_model.add(BatchNormalization())
 
     # other_info = Input(batch_shape=(None, OTHER_INFO_SIZE,))
 
@@ -82,17 +81,20 @@ def read_csv(file_name):
     number_of_zero = 0
     number_of_game = 0
     with open(file_name, 'r') as csvfile:
-        reader = csv.reader(csvfile, delimiter=';', quotechar='"')
-        next(reader, None)
+        reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         for row in reader:
-            # csv_content.append(row)
-            action_list = row[1].split(',')
+            action_list = row[2:]
             player_id = row[0]
-            race = action_list[0]
+            race = row[1]
 
             game = np.zeros(shape=(VECTOR_DEPTH, VECTOR_SIZE), dtype=int)
 
-            for i in range(1, len(action_list) - 1, 2):
+            i = 0
+            for current_action in action_list:
+                index, value = action_name_to_vector_id(current_action)
+                if game[index][current_timestep] != 0:
+                    collision[index] += 1
+            for i in range(1, len(action_list) - 1):
                 current_action = action_list[i]
                 current_timestep = int(int(action_list[i + 1]) * VECTOR_CONCENTRATION_RATIO)
                 # action_id = action_name_to_id(current_action)
@@ -120,17 +122,18 @@ if __name__ == "__main__":
 
     model = get_conv_model()
 
-    train_player_game_dict, test_player_game_dict = split_training_set(csv_player_game_dict, 0.1)
+    # train_player_game_dict, test_player_game_dict = split_training_set(csv_player_game_dict, 0.1)
+    train_player_game_dict = csv_player_game_dict
 
-    training_input, training_input_oi, training_output, _ = csv_sequence_set_to_keras_batch(train_player_game_dict)
-    test_input, test_input_oi, test_output, _ = csv_sequence_set_to_keras_batch(test_player_game_dict)
+    training_input, _, training_output, _ = csv_sequence_set_to_keras_batch(train_player_game_dict)
+    # test_input, test_input_oi, test_output, _ = csv_sequence_set_to_keras_batch(test_player_game_dict)
 
     model.fit(x=np.array(training_input),
               y=np.array(training_output),
               epochs=500,
               batch_size=16,
-              validation_data=(np.array(test_input),
-                               np.array(test_output)),
+              # validation_data=(np.array(test_input),
+              #                  np.array(test_output)),
               verbose=1
               )
 

@@ -26,7 +26,7 @@ VECTOR_DEPTH = 10 + 1
 OTHER_INFO_SIZE = 3 + 1
 OTHER_INFO_SIZE_EXPANDED = 3 + 1 + 64
 
-VECTOR_SIZE_LSTM = 1000
+VECTOR_SIZE_LSTM = 5000
 
 
 def read_int_from_file(default_val, file):

@@ -72,7 +72,7 @@ def read_csv(file_name):
     return players_action_dict
 
 
-def read_new_csv(file_name, read_all=False):
+def read_new_csv(file_name, read_all=False, time_limit=GAME_TIME_STEP_LIMIT):
     players_action_dict = defaultdict(list)
     with open(file_name, 'r') as csvfile:
         number_of_line = sum(1 for _ in csvfile)  # count the number of line in the file
@@ -82,27 +82,27 @@ def read_new_csv(file_name, read_all=False):
             action_list = row[2:]
             player_id = row[0]
             race = row[1]
-            action_first_time_dict = {'s': GAME_TIME_STEP_LIMIT, 'hotkey50': GAME_TIME_STEP_LIMIT,
-                                      'hotkey40': GAME_TIME_STEP_LIMIT, 'hotkey52': GAME_TIME_STEP_LIMIT,
-                                      'hotkey42': GAME_TIME_STEP_LIMIT, 'hotkey10': GAME_TIME_STEP_LIMIT,
-                                      'hotkey12': GAME_TIME_STEP_LIMIT, 'hotkey20': GAME_TIME_STEP_LIMIT,
-                                      'hotkey22': GAME_TIME_STEP_LIMIT, 'hotkey30': GAME_TIME_STEP_LIMIT,
-                                      'hotkey60': GAME_TIME_STEP_LIMIT,
-                                      'hotkey62': GAME_TIME_STEP_LIMIT,
-                                      'hotkey32': GAME_TIME_STEP_LIMIT, 'Base': GAME_TIME_STEP_LIMIT,
-                                      'hotkey70': GAME_TIME_STEP_LIMIT, 'hotkey72': GAME_TIME_STEP_LIMIT,
-                                      'hotkey00': GAME_TIME_STEP_LIMIT,
-                                      'hotkey90': GAME_TIME_STEP_LIMIT,
-                                      'hotkey80': GAME_TIME_STEP_LIMIT, 'SingleMineral': GAME_TIME_STEP_LIMIT,
-                                      'hotkey02': GAME_TIME_STEP_LIMIT, 'hotkey82': GAME_TIME_STEP_LIMIT,
-                                      'hotkey92': GAME_TIME_STEP_LIMIT,
-                                      'hotkey91': GAME_TIME_STEP_LIMIT,
-                                      'hotkey01': GAME_TIME_STEP_LIMIT, 'hotkey41': GAME_TIME_STEP_LIMIT,
-                                      'hotkey21': GAME_TIME_STEP_LIMIT, 'hotkey71': GAME_TIME_STEP_LIMIT,
-                                      'hotkey81': GAME_TIME_STEP_LIMIT,
-                                      'hotkey61': GAME_TIME_STEP_LIMIT,
-                                      'hotkey11': GAME_TIME_STEP_LIMIT, 'hotkey51': GAME_TIME_STEP_LIMIT,
-                                      'hotkey31': GAME_TIME_STEP_LIMIT}
+            action_first_time_dict = {'s': time_limit, 'hotkey50': time_limit,
+                                      'hotkey40': time_limit, 'hotkey52': time_limit,
+                                      'hotkey42': time_limit, 'hotkey10': time_limit,
+                                      'hotkey12': time_limit, 'hotkey20': time_limit,
+                                      'hotkey22': time_limit, 'hotkey30': time_limit,
+                                      'hotkey60': time_limit,
+                                      'hotkey62': time_limit,
+                                      'hotkey32': time_limit, 'Base': time_limit,
+                                      'hotkey70': time_limit, 'hotkey72': time_limit,
+                                      'hotkey00': time_limit,
+                                      'hotkey90': time_limit,
+                                      'hotkey80': time_limit, 'SingleMineral': time_limit,
+                                      'hotkey02': time_limit, 'hotkey82': time_limit,
+                                      'hotkey92': time_limit,
+                                      'hotkey91': time_limit,
+                                      'hotkey01': time_limit, 'hotkey41': time_limit,
+                                      'hotkey21': time_limit, 'hotkey71': time_limit,
+                                      'hotkey81': time_limit,
+                                      'hotkey61': time_limit,
+                                      'hotkey11': time_limit, 'hotkey51': time_limit,
+                                      'hotkey31': time_limit}
             action_dict = {'s': 0, 'hotkey50': 0, 'hotkey40': 0, 'hotkey52': 0, 'hotkey42': 0, 'hotkey10': 0,
                            'hotkey12': 0, 'hotkey20': 0, 'hotkey22': 0, 'hotkey30': 0, 'hotkey60': 0, 'hotkey62': 0,
                            'hotkey32': 0, 'Base': 0, 'hotkey70': 0, 'hotkey72': 0, 'hotkey00': 0, 'hotkey90': 0,
@@ -119,7 +119,7 @@ def read_new_csv(file_name, read_all=False):
                     max_ap5s = max_ap5s if max_ap5s > ap5s else ap5s
                     ap5s = 0
                     continue
-                if current_timestep > GAME_TIME_STEP_LIMIT:
+                if current_timestep > time_limit:
                     break
                 action_dict[current_action] += 1
                 ap5s += 1
