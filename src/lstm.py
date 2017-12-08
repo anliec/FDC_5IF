@@ -8,7 +8,7 @@ from src.const import *
 from src.utils import *
 
 INPUT_SHAPE = (VECTOR_DEPTH, VECTOR_SIZE_LSTM)
-LSTM_SIZE = 16
+LSTM_SIZE = 100
 
 
 def get_model():
@@ -22,7 +22,9 @@ def get_model():
                           activation='relu'))
     lstm_model.add(BatchNormalization())
     lstm_model.add(MaxPooling1D(pool_size=2))
-    lstm_model.add(LSTM(LSTM_SIZE))
+    lstm_model.add(LSTM(LSTM_SIZE,
+                        dropout=0.2,
+                        recurrent_dropout=0.2))
     lstm_model.add(BatchNormalization())
     lstm_model.add(Dense(NUMBER_OF_PLAYERS,
                          activation='softmax'))
@@ -64,7 +66,7 @@ if __name__ == "__main__":
               y=batch_output,
               validation_data=(val_batch_input, val_batch_output),
               epochs=1,
-              batch_size=100,
+              batch_size=10,
               verbose=1
               )
     print("finished")

@@ -43,19 +43,19 @@ def get_conv_model():
                           padding='valid',
                           activation='relu'))
     conv_model.add(MaxPool1D(pool_size=4))
-    conv_model.add(BatchNormalization())
+    # conv_model.add(BatchNormalization())
     # conv_model.add(Permute(dims=(2, 1)))
-    conv_model.add(Conv1D(filters=32,
-                          kernel_size=5,
-                          activation='sigmoid'))
-    conv_model.add(MaxPool1D(pool_size=4))
+    #conv_model.add(Conv1D(filters=32,
+                          # kernel_size=5,
+                          # activation='relu'))
+    # conv_model.add(MaxPool1D(pool_size=4))
     conv_model.add(Flatten())
 
     # other_info = Input(batch_shape=(None, OTHER_INFO_SIZE,))
 
     # conv_model.add(Concatenate()([conv, other_info])
-    conv_model.add(Dense(64,
-                         activation='relu'
+    conv_model.add(Dense(10,
+                         activation='sigmoid'
                          ))
     conv_model.add(Dropout(0.1))
     conv_model.add(BatchNormalization())
