@@ -75,65 +75,23 @@ def get_conv_model():
     return conv_model
 
 
-def read_csv(file_name):
-    players_game_dict = defaultdict(list)
-    collision = np.zeros(shape=(VECTOR_DEPTH,))
-    number_of_zero = 0
-    number_of_game = 0
-    with open(file_name, 'r') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-        for row in reader:
-            action_list = row[2:]
-            player_id = row[0]
-            race = row[1]
-
-            game = np.zeros(shape=(VECTOR_DEPTH, VECTOR_SIZE), dtype=int)
-
-            i = 0
-            for current_action in action_list:
-                index, value = action_name_to_vector_id(current_action)
-                if game[index][current_timestep] != 0:
-                    collision[index] += 1
-            for i in range(1, len(action_list) - 1):
-                current_action = action_list[i]
-                current_timestep = int(int(action_list[i + 1]) * VECTOR_CONCENTRATION_RATIO)
-                # action_id = action_name_to_id(current_action)
-                index, value = action_name_to_vector_id(current_action)
-                if game[index][current_timestep] != 0:
-                    collision[index] += 1
-                game[index][current_timestep] = value
-
-            number_of_game += 1
-            number_of_zero += VECTOR_SIZE * VECTOR_DEPTH - np.count_nonzero(game)
-
-            players_game_dict[player_id].append((race, game))
-    print("number of collision:", np.sum(collision))
-    print("collision per game :", np.sum(collision) / number_of_game)
-    print("number of game:     ", number_of_game)
-    print("sparsity:           ", number_of_zero * 100 / (VECTOR_SIZE * VECTOR_DEPTH * number_of_game))
-    print("collision detail")
-    for i, v in enumerate(collision):
-        print("hotkey" + str(i), v)
-    return players_game_dict
-
-
 if __name__ == "__main__":
     csv_player_game_dict = read_csv_sequence("data/train2.csv")
 
     model = get_conv_model()
 
-    # train_player_game_dict, test_player_game_dict = split_training_set(csv_player_game_dict, 0.1)
+    train_player_game_dict, test_player_game_dict = split_training_set(csv_player_game_dict, 0.01)
     train_player_game_dict = csv_player_game_dict
 
     training_input, _, training_output, _ = csv_sequence_set_to_keras_batch(train_player_game_dict)
-    # test_input, test_input_oi, test_output, _ = csv_sequence_set_to_keras_batch(test_player_game_dict)
+    test_input, test_input_oi, test_output, _ = csv_sequence_set_to_keras_batch(test_player_game_dict)
 
     model.fit(x=np.array(training_input),
               y=np.array(training_output),
-              epochs=500,
+              epochs=1000,
               batch_size=16,
-              # validation_data=(np.array(test_input),
-              #                  np.array(test_output)),
+              validation_data=(np.array(test_input),
+                               np.array(test_output)),
               verbose=1
               )
 
