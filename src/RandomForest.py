@@ -24,13 +24,9 @@ if __name__ == "__main__":
     pipe = Pipeline(steps=[('tree', clf)])
 
     # Prediction
-    # max_depth = [15, 20, 25]
-    # min_samples_split = [3, 4, 5]
-    # n_estimators = [100, 110, 120]
-
-    max_depth = [20]
-    min_samples_split = [4]
-    n_estimators = [110]
+    max_depth = [10, 15, 20, 25, 30]
+    min_samples_split = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+    n_estimators = [30, 40, 50, 60, 70, 80, 90, 100, 110, 120]
 
     clf.fit(X=np.array(input_batch),
             y=np.array(output_batch))

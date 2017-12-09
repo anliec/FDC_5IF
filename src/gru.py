@@ -22,9 +22,7 @@ def get_model():
                           activation='relu'))
     lstm_model.add(BatchNormalization())
     lstm_model.add(MaxPooling1D(pool_size=2))
-    lstm_model.add(LSTM(LSTM_SIZE,
-                        dropout=0.2,
-                        recurrent_dropout=0.2))
+    lstm_model.add(GRU(LSTM_SIZE))
     lstm_model.add(BatchNormalization())
     lstm_model.add(Dense(NUMBER_OF_PLAYERS,
                          activation='softmax'))
@@ -71,5 +69,5 @@ if __name__ == "__main__":
               )
     print("finished")
 
-    save_model(model, "lstm.knn")
+    save_model(model, "gru.knn")
 
