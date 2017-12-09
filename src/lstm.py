@@ -21,10 +21,10 @@ def get_model():
                           padding='valid',
                           activation='relu'))
     lstm_model.add(BatchNormalization())
-    lstm_model.add(MaxPooling1D(pool_size=2))
+    # lstm_model.add(MaxPooling1D(pool_size=2))
     lstm_model.add(LSTM(LSTM_SIZE,
-                        dropout=0.2,
-                        recurrent_dropout=0.2))
+                        dropout=0.1,
+                        recurrent_dropout=0.1))
     lstm_model.add(BatchNormalization())
     lstm_model.add(Dense(NUMBER_OF_PLAYERS,
                          activation='softmax'))
@@ -67,6 +67,6 @@ if __name__ == "__main__":
               validation_data=(val_batch_input, val_batch_output),
               epochs=1,
               batch_size=10,
-              verbose=1
+              verbose=2
               )
     print("finished")
