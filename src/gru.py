@@ -21,7 +21,7 @@ def get_model():
                           padding='valid',
                           activation='relu'))
     lstm_model.add(BatchNormalization())
-    lstm_model.add(MaxPooling1D(pool_size=2))
+    # lstm_model.add(MaxPooling1D(pool_size=2))
     lstm_model.add(GRU(LSTM_SIZE))
     lstm_model.add(BatchNormalization())
     lstm_model.add(Dense(NUMBER_OF_PLAYERS,
@@ -63,9 +63,9 @@ if __name__ == "__main__":
     model.fit(x=batch_input,
               y=batch_output,
               validation_data=(val_batch_input, val_batch_output),
-              epochs=1000,
+              epochs=500,
               batch_size=10,
-              verbose=1
+              verbose=2
               )
     print("finished")
 

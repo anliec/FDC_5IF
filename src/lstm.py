@@ -65,7 +65,7 @@ if __name__ == "__main__":
     model.fit(x=batch_input,
               y=batch_output,
               validation_data=(val_batch_input, val_batch_output),
-              epochs=1000,
+              epochs=500,
               batch_size=10,
               verbose=2
               )
