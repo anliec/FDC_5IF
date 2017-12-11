@@ -8,14 +8,14 @@ from src.const import *
 from src.utils import *
 
 INPUT_SHAPE = (VECTOR_DEPTH, VECTOR_SIZE_LSTM)
-LSTM_SIZE = 100
+LSTM_SIZE = 50
 
 
 def get_model():
     lstm_model = Sequential()
     lstm_model.add(InputLayer(input_shape=INPUT_SHAPE))
     lstm_model.add(Permute((2, 1)))
-    lstm_model.add(BatchNormalization())
+    # lstm_model.add(BatchNormalization())  # removed to avoid division by 0
     lstm_model.add(Conv1D(filters=4,
                           kernel_size=5,
                           padding='valid',
